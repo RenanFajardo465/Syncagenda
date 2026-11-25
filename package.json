@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "gen:secret": "node -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\""
+    "gen:secret": "node -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\"",
+    "test": "tsx --conditions=react-server --test tests/*.test.ts"
   },
   "engines": {
     "node": ">=20"
@@ -28,6 +29,7 @@
     "@types/react": "^19.3.3",
     "@types/react-dom": "^19.3.0",
     "tailwindcss": "^4.3.5",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3"
   }
 }

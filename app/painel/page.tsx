@@ -34,10 +34,10 @@ function ConnectionCard({ title, conn, connectHref }: { title: string; conn?: Co
   );
 }
 
-export default async function Painel({ searchParams }: { searchParams: Promise<{ erro?: string; ok?: string }> }) {
+export default async function Painel({ searchParams }: { searchParams: Promise<{ erro?: string; ok?: string; sync?: string }> }) {
   const session = await getSession();
   if (!session) redirect("/");
-  const { erro, ok } = await searchParams;
+  const { erro, ok, sync } = await searchParams;
 
   const { data } = await db().from("connections").select("*").eq("user_id", session.uid);
   const byProvider = new Map((data as ConnectionRow[] | null)?.map((c) => [c.provider as Provider, c]) ?? []);
@@ -56,6 +56,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
       </header>
 
       {erro && <p className="mt-6 rounded-md bg-red-50 p-3 text-sm text-red-700">{erro}</p>}
+      {sync && <p className="mt-6 rounded-md bg-blue-50 p-3 text-sm text-blue-900">Sincronização concluída. {sync}</p>}
       {ok === "google" && <p className="mt-6 rounded-md bg-green-50 p-3 text-sm text-green-800">Google conectado com sucesso.</p>}
 
       <section className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -65,6 +66,21 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
           conn={google}
           connectHref={!google || google.status !== "ok" ? "/api/auth/google/login" : undefined}
         />
+      </section>
+
+      <section className="mt-8 rounded-lg border border-slate-200 bg-white p-4">
+        <h2 className="font-medium">Sincronização</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Confere todos os eventos de 7 dias atrás até 180 dias à frente e acerta as cópias nos dois sentidos.
+        </p>
+        <form action="/api/sync/now" method="post" className="mt-3">
+          <button
+            disabled={!google || google.status !== "ok"}
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-slate-300"
+          >
+            Sincronizar agora
+          </button>
+        </form>
       </section>
     </main>
   );
