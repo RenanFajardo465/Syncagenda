@@ -19,7 +19,9 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export async function fetchWithRetry(url: string, init: RequestInit = {}, maxRetries = 4): Promise<Response> {
   for (let attempt = 0; ; attempt++) {
     const res = await fetch(url, init);
-    const retryable = res.status === 429 || (res.status >= 500 && res.status <= 504);
+    let retryable = res.status === 429 || (res.status >= 500 && res.status <= 504);
+    // O Google também sinaliza limite de uso com 403 + rateLimitExceeded.
+    if (res.status === 403 && /rateLimitExceeded|userRateLimitExceeded/.test(await res.clone().text())) retryable = true;
     if (!retryable || attempt >= maxRetries) return res;
     const retryAfter = Number(res.headers.get("retry-after"));
     const wait = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 500 * 2 ** attempt;

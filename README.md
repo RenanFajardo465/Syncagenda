@@ -2,7 +2,7 @@
 
 Sincronização **em tempo real e nos dois sentidos** entre a agenda do **Outlook/Teams (Microsoft 365)** e a **Google Agenda** de cada usuário. Substitui o Zap do Zapier que copiava reuniões do Calendly para o Outlook.
 
-> Status: **Etapa 2 de 7** (login Microsoft e conexão Google). Este README cresce a cada etapa.
+> Status: **Etapa 3 de 7** (sincronização manual nos dois sentidos). Este README cresce a cada etapa.
 
 ## O que o sistema faz
 
@@ -69,6 +69,20 @@ Rode no terminal do seu computador (no Mac: aplicativo "Terminal"). Se o Node n�
 3. **Supabase:** o projeto `syncagenda` (região São Paulo) já foi criado e as tabelas de `supabase/migrations/` já foram aplicadas.
 4. **Vercel:** o projeto `syncagenda` já está ligado a este repositório. Falta preencher as variáveis: [guia](docs/configurar-vercel.md).
 
+## Como a sincronização funciona
+
+- **Ocorrências individuais:** reuniões recorrentes são copiadas ocorrência por ocorrência (Outlook `calendarView`, Google `singleEvents=true`). Cada cópia é um evento único no destino.
+- **Campos copiados:** título (com prefixo opcional), início/fim no fuso de São Paulo, dia inteiro, local, descrição em texto simples e disponibilidade (Ocupado/Livre).
+- **Link da reunião:** o link do Meet (Google → Outlook) ou do Teams (Outlook → Google) vai para o **local** e para a **primeira linha da descrição**.
+- **Modo "apenas Ocupado":** a cópia fica com o título "Ocupado", sem local e sem descrição.
+- **Sem convites:** as cópias nunca têm participantes. No Google toda gravação usa `sendUpdates=none`.
+- **Sem loop:** cada cópia leva uma marca (`extendedProperties.private.syncCopy` no Google e uma propriedade estendida com GUID próprio no Outlook) e também fica registrada em `event_links`. Cópias nunca são usadas como origem.
+- **Originais intocados:** o sistema só altera ou apaga eventos que ele mesmo criou.
+- **Recusados e cancelados:** não são copiados; se já havia cópia, ela é removida.
+- **Transição do Zapier:** eventos do Outlook cuja descrição contém `IGNORE_OUTLOOK_DESCRIPTION_CONTAINS` (padrão: `Agendado via Calendly`) são ignorados.
+- **Sem regravação à toa:** um resumo (`content_hash`) evita atualizar cópias que não mudaram.
+- **Limites das APIs:** respostas 429/503 são repetidas com espera crescente.
+
 ## Segurança
 
 - Login no painel só com conta Microsoft da empresa **e** e-mail listado em `ALLOWED_EMAILS`.
@@ -85,3 +99,5 @@ npm run dev                  # abre em http://localhost:3000
 ```
 
 `GET /api/health` diz quais variáveis estão faltando, sem mostrar valores.
+
+`npm test` roda os testes de mapeamento de campos e regras críticas.
