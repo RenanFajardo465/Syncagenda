@@ -2,7 +2,7 @@
 
 Sincronização **em tempo real e nos dois sentidos** entre a agenda do **Outlook/Teams (Microsoft 365)** e a **Google Agenda** de cada usuário. Substitui o Zap do Zapier que copiava reuniões do Calendly para o Outlook.
 
-> Status: **Etapa 1 de 7** (estrutura do projeto). Este README cresce a cada etapa.
+> Status: **Etapa 2 de 7** (login Microsoft e conexão Google). Este README cresce a cada etapa.
 
 ## O que o sistema faz
 
@@ -62,9 +62,19 @@ Rode no terminal do seu computador (no Mac: aplicativo "Terminal"). Se o Node n�
 
 > A `TOKEN_ENCRYPTION_KEY` precisa ser exatamente o formato gerado acima (32 bytes em base64). Se ela for trocada, todas as contas precisam ser conectadas de novo.
 
-## Configurações externas
+## Configurações externas (passo a passo com cliques)
 
-O passo a passo com cliques para Microsoft Entra, Google Cloud, Supabase e Vercel será preenchido nas próximas etapas.
+1. **Microsoft Entra (Azure):** feito pelo administrador. Envie a ele o [texto pronto](docs/texto-administrador-m365.md).
+2. **Google Cloud:** [guia](docs/configurar-google-cloud.md).
+3. **Supabase:** o projeto `syncagenda` (região São Paulo) já foi criado e as tabelas de `supabase/migrations/` já foram aplicadas.
+4. **Vercel:** o projeto `syncagenda` já está ligado a este repositório. Falta preencher as variáveis: [guia](docs/configurar-vercel.md).
+
+## Segurança
+
+- Login no painel só com conta Microsoft da empresa **e** e-mail listado em `ALLOWED_EMAILS`.
+- Tokens da Microsoft e do Google são gravados criptografados (AES-256-GCM, chave `TOKEN_ENCRYPTION_KEY`) e nunca aparecem no log.
+- Sessão do painel em cookie assinado (HMAC, chave `SESSION_SECRET`), válida por 30 dias.
+- Se o acesso ao Google ou à Microsoft for revogado, a conexão fica como **"Precisa reconectar"** no painel.
 
 ## Rodar localmente (opcional, para desenvolvedores)
 
